@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoaPro Caller</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login" id="loginView">
+  <div class="box">
+    <div class="logo">N</div>
+    <h1>NoaPro Caller</h1>
+    <p>Sign in to the team call list.</p>
+    <form id="loginForm">
+      <label>Email</label>
+      <input type="email" id="email" autocomplete="email" required>
+      <label>Password</label>
+      <input type="password" id="password" autocomplete="current-password" required>
+      <p class="err" id="loginErr"></p>
+      <button class="btn pri" style="width:100%" type="submit" id="loginBtn">Sign in</button>
+    </form>
+    <button class="btn ghost" style="width:100%;margin-top:10px" id="magicBtn">Email me a magic link instead</button>
+    <p class="magic-note" id="magicNote"></p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div class="app hidden" id="appView">
+  <aside class="side">
+    <div class="brand"><span class="logo">N</span> NoaPro <span style="font-size:12px;color:var(--muted);font-weight:600">Caller</span></div>
+    <nav class="nav" id="nav">
+      <button class="active" data-p="queue">📞 Call Queue <span class="badge" id="queueCount">0</span></button>
+      <button data-p="dash">▣ Dashboard</button>
+      <button data-p="files">▦ Files</button>
+    </nav>
+    <div class="side-foot">
+      <p class="team">Callers</p>
+      <div id="teamList"></div>
+      <button class="signout" id="signout">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="search">🔍 <input id="search" placeholder="Search leads by name, phone, area…"></div>
+      <div class="spacer"></div>
+      <label class="btn ghost" for="csvInput" style="cursor:pointer">⬆ Import CSV</label>
+      <input type="file" id="csvInput" accept=".csv" class="hidden">
+      <button class="btn ghost" id="exportBtn">⬇ Export results</button>
+      <button class="btn ghost" id="exportLogBtn">⬇ Export call log</button>
+      <button class="btn pri" id="addLeadBtn">+ Add lead</button>
+    </header>
+
+    <div class="content">
+
+      <!-- QUEUE -->
+      <section class="page show" id="queue">
+        <h1>Call Queue</h1>
+        <p class="sub">Claim a lead before you dial — it locks for everyone else in real time, so no two of you call the same business.</p>
+        <div class="cockpit">
+          <div class="panel">
+            <div class="panel-h">Unclaimed leads <span class="pill"><span class="blink"></span> live</span></div>
+            <div id="queueList"><div class="empty">Loading…</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-h" id="callHeader">Your active call</div>
+            <div id="callCard"><div class="noactive">No lead claimed. Pick one from the queue to start calling.</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section class="page" id="dash">
+        <h1>Team Dashboard</h1>
+        <p class="sub">Live calling stats — updates the instant anyone logs an outcome.</p>
+        <div class="cards" id="statCards"></div>
+        <div class="grid2">
+          <div class="panel">
+            <div class="panel-h">Sign-ups by caller (today)</div>
+            <div id="leaderboard"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-h">Outcomes breakdown (today)</div>
+            <div id="outcomes"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-h">Targets
+            <div class="seg" id="tgSeg" style="margin-left:auto">
+              <button data-period="day" class="active">Day</button>
+              <button data-period="week">Week</button>
+              <button data-period="month">Month</button>
+            </div>
+            <span class="pill" id="targetPill" style="margin-left:10px"></span>
+          </div>
+          <div id="targets"></div>
+        </div>
+      </section>
+
+      <!-- FILES -->
+      <section class="page" id="files">
+        <h1>Files</h1>
+        <p class="sub">Shared storage — call scripts, the lead lists you import, and general info docs.</p>
+        <div class="panel">
+          <div class="panel-h">Shared files
+            <label class="btn ghost" for="fileInput" style="margin-left:auto;cursor:pointer">⬆ Upload</label>
+            <input type="file" id="fileInput" class="hidden">
+          </div>
+          <div class="files" id="fileList"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
