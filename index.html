@@ -4,16 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NoaPro Caller</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
 
 <!-- ============ LOGIN ============ -->
 <div class="login" id="loginView">
   <div class="box">
-    <div class="logo">N</div>
-    <h1>NoaPro Caller</h1>
-    <p>Sign in to the team call list.</p>
+    <img class="brand-logo" src="https://noapro.co.uk/logo.png" alt="NoaPro">
+    <p class="login-tag">Caller — sign in to the team call list.</p>
     <form id="loginForm">
       <label>Email</label>
       <input type="email" id="email" autocomplete="email" required>
@@ -30,11 +29,11 @@
 <!-- ============ APP ============ -->
 <div class="app hidden" id="appView">
   <aside class="side">
-    <div class="brand"><span class="logo">N</span> NoaPro <span style="font-size:12px;color:var(--muted);font-weight:600">Caller</span></div>
+    <div class="brand"><img class="brand-logo-sm" src="https://noapro.co.uk/logo.png" alt="NoaPro"> <span style="font-size:12px;color:var(--muted);font-weight:600">Caller</span></div>
     <nav class="nav" id="nav">
       <button class="active" data-p="queue">📞 Call Queue <span class="badge" id="queueCount">0</span></button>
       <button data-p="dash">▣ Dashboard</button>
-      <button data-p="files">▦ Files</button>
+      <button data-p="files">▦ Files &amp; Imports</button>
     </nav>
     <div class="side-foot">
       <p class="team">Callers</p>
@@ -47,8 +46,6 @@
     <header class="top">
       <div class="search">🔍 <input id="search" placeholder="Search leads by name, phone, area…"></div>
       <div class="spacer"></div>
-      <label class="btn ghost" for="csvInput" style="cursor:pointer">⬆ Import CSV</label>
-      <input type="file" id="csvInput" accept=".csv" class="hidden">
       <button class="btn ghost" id="exportBtn">⬇ Export results</button>
       <button class="btn ghost" id="exportLogBtn">⬇ Export call log</button>
       <button class="btn pri" id="addLeadBtn">+ Add lead</button>
@@ -100,12 +97,28 @@
         </div>
       </section>
 
-      <!-- FILES -->
+      <!-- FILES & IMPORTS -->
       <section class="page" id="files">
-        <h1>Files</h1>
-        <p class="sub">Shared storage — call scripts, the lead lists you import, and general info docs.</p>
+        <h1>Files &amp; Imports</h1>
+        <p class="sub">Two separate things here: importing a lead spreadsheet into your call queue, and storing shared files like scripts and info docs.</p>
+
+        <!-- 1) Import lead spreadsheet -->
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-h">📥 Import lead spreadsheet</div>
+          <div class="import-card">
+            <div class="drop">
+              <h3>Add leads to the call queue</h3>
+              <p>Upload a CSV of businesses. Needs a <b>business</b> column; it also reads <b>phone</b>, <b>category</b> and <b>area</b> (any order).</p>
+              <label class="import-big" for="csvInput">⬆ Choose CSV file</label>
+              <input type="file" id="csvInput" accept=".csv" class="hidden">
+              <div class="import-note" id="importNote">A copy of the file is also saved to Shared files below.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2) Shared files -->
         <div class="panel">
-          <div class="panel-h">Shared files
+          <div class="panel-h">📁 Shared files
             <label class="btn ghost" for="fileInput" style="margin-left:auto;cursor:pointer">⬆ Upload</label>
             <input type="file" id="fileInput" class="hidden">
           </div>
@@ -119,6 +132,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=3"></script>
 </body>
 </html>

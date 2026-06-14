@@ -135,7 +135,7 @@ async function loadQueue() {
     const overdue = l.callback_at && new Date(l.callback_at) <= new Date();
     const right = l.claimed_by
       ? `<span class="locked">🔒 ${esc(initials(profiles[l.claimed_by]) )} calling</span>`
-      : `<span class="${stClass(l.status)}">${esc(l.status)}</span><button class="claim" data-id="${l.id}">Claim</button>`;
+      : `<span class="${stClass(l.status)}">${esc(l.status)}</span><button class="claim" data-id="${l.id}">Claim</button><button class="del" data-del="${l.id}" title="Delete lead">🗑</button>`;
     return `<div class="lead">
       <div>
         <div class="nm">${esc(l.business)}</div>
@@ -146,6 +146,7 @@ async function loadQueue() {
   }).join("") : `<div class="empty">No leads to call. Import a CSV or add a lead.</div>`;
 
   $$("#queueList .claim").forEach(b => b.addEventListener("click", () => claim(b.dataset.id)));
+  $$("#queueList .del").forEach(b => b.addEventListener("click", () => deleteLead(b.dataset.del)));
   renderCall();
 }
 
@@ -190,6 +191,7 @@ function renderCall() {
       </div>
       <div class="savebar">
         <button class="btn ghost" id="releaseBtn">Release lead</button>
+        <button class="btn ghost" id="delLeadBtn" style="color:var(--red);border-color:var(--red)">Delete lead</button>
       </div>
     </div>`;
   // wire outcome buttons
@@ -200,6 +202,7 @@ function renderCall() {
   // callback confirm via Enter on datetime
   $("#cbTime").addEventListener("change", () => logOutcome("Callback"));
   $("#releaseBtn").addEventListener("click", releaseLead);
+  $("#delLeadBtn").addEventListener("click", () => deleteLead(active && active.id));
   restoreTimerDisplay();
 }
 
@@ -233,6 +236,16 @@ async function releaseLead() {
   await sb.from("leads").update({ claimed_by: null, claimed_at: null, status: active.status === "Calling" ? "New" : active.status })
     .eq("id", active.id);
   active = null; stopTimer();
+  loadQueue();
+}
+
+async function deleteLead(id) {
+  if (!id) return;
+  if (!confirm("Delete this lead permanently? This also removes its call history.")) return;
+  const { error } = await sb.from("leads").delete().eq("id", id);
+  if (error) { toast(error.message); return; }
+  if (active && active.id === id) { active = null; stopTimer(); }
+  toast("Lead deleted.");
   loadQueue();
 }
 
@@ -392,9 +405,18 @@ async function loadFiles() {
   const files = (data || []).filter(f => f.id);
   $("#fileList").innerHTML = files.length ? files.map(f => {
     const ext = (f.name.split(".").pop() || "").toUpperCase().slice(0,4);
-    return `<div class="file" data-name="${esc(f.name)}"><span class="fic">${esc(ext)}</span><div><div class="nm">${esc(f.name)}</div><div class="mt">${new Date(f.created_at).toLocaleDateString()}</div></div></div>`;
+    return `<div class="file" data-name="${esc(f.name)}"><span class="fic">${esc(ext)}</span><div><div class="nm">${esc(f.name)}</div><div class="mt">${new Date(f.created_at).toLocaleDateString()}</div></div><button class="fdel" data-fdel="${esc(f.name)}" title="Delete file">🗑</button></div>`;
   }).join("") : `<div class="empty">No files yet. Upload a script or lead list.</div>`;
   $$("#fileList .file").forEach(el => el.addEventListener("click", () => downloadFile(el.dataset.name)));
+  $$("#fileList .fdel").forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); deleteFile(b.dataset.fdel); }));
+}
+
+async function deleteFile(name) {
+  if (!confirm(`Delete "${name}" permanently?`)) return;
+  const { error } = await sb.storage.from("files").remove([name]);
+  if (error) { toast(error.message); return; }
+  toast("File deleted.");
+  loadFiles();
 }
 
 async function downloadFile(name) {

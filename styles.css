@@ -4,7 +4,7 @@
    hex/font and the whole app re-skins instantly.
    ============================================================ */
 :root{
-  --brand:#0d7d6b;--brand-dark:#0a5d50;--brand-soft:#e6f4f1;
+  --brand:#1190ef;--brand-dark:#0a6fc7;--brand-soft:#e7f2fd;
   --ink:#0f1f23;--muted:#5b7077;--line:#e4ebec;--bg:#f6f9f9;--card:#fff;
   --ok:#1f9d57;--amber:#9a6500;--amber-bg:#fff4e0;--red:#b3261e;--red-bg:#fde8e8;
   --blue:#2f6fb0;--blue-bg:#e8f1fb;--grey:#6b7c81;--grey-bg:#eef2f2;
@@ -148,6 +148,27 @@ textarea:focus,input.dt:focus{border-color:var(--brand)}
 .file:hover{border-color:var(--brand)}
 .fic{width:38px;height:38px;border-radius:9px;background:var(--brand-soft);color:var(--brand-dark);display:grid;place-items:center;font-weight:800;font-size:11px}
 .file .nm{font-weight:600;font-size:13px;word-break:break-all}.file .mt{color:var(--muted);font-size:11px;margin-top:2px}
+
+/* brand logo (real NoaPro logo image) */
+.brand-logo{height:48px;width:auto;max-width:200px;display:block;margin-bottom:16px}
+.brand-logo-sm{height:26px;width:auto;max-width:130px}
+.login-tag{color:var(--muted);font-size:13px;margin:0 0 22px;font-weight:600}
+
+/* delete buttons */
+.del{border:1px solid var(--line);background:#fff;color:var(--red);border-radius:8px;width:30px;height:30px;font-size:14px;cursor:pointer;line-height:1;flex:0 0 auto}
+.del:hover{background:var(--red-bg);border-color:var(--red)}
+.fdel{margin-left:auto;border:1px solid var(--line);background:#fff;color:var(--red);border-radius:8px;width:28px;height:28px;font-size:13px;cursor:pointer;flex:0 0 auto}
+.fdel:hover{background:var(--red-bg);border-color:var(--red)}
+
+/* import-leads section */
+.import-card{padding:22px;text-align:center}
+.import-card .drop{border:2px dashed var(--line);border-radius:14px;padding:26px;background:var(--bg)}
+.import-card .drop:hover{border-color:var(--brand)}
+.import-card h3{margin:0 0 6px;font-size:15px}
+.import-card p{color:var(--muted);font-size:13px;margin:0 0 16px}
+.import-big{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:0;border-radius:10px;padding:12px 20px;font-weight:700;font-size:14px;cursor:pointer}
+.import-big:hover{background:var(--brand-dark)}
+.import-note{font-size:12px;color:var(--muted);margin-top:12px}
 
 /* toast */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:50;pointer-events:none}
