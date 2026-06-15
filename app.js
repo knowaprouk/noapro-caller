@@ -298,10 +298,10 @@ async function loadDashboard() {
 
   const conv = calls.length ? Math.round((signups / calls.length) * 1000) / 10 : 0;
   $("#statCards").innerHTML = `
-    ${card("Calls today", calls.length, "")}
-    ${card("Sign-ups today", signups, conv + "% conversion")}
-    ${card("Callbacks due", callbacksDue ?? 0, "", "var(--amber)")}
-    ${card("Leads remaining", remaining ?? 0, "", "var(--muted)")}`;
+    ${card("Calls today", calls.length, "", "", "calls-today")}
+    ${card("Sign-ups today", signups, conv + "% conversion", "", "signups-today")}
+    ${card("Callbacks due", callbacksDue ?? 0, "", "var(--amber)", "callbacks-due")}
+    ${card("Leads remaining", remaining ?? 0, "", "var(--muted)", "leads-remaining")}`;
 
   // leaderboard (sign-ups by caller)
   const byCaller = {};
@@ -417,8 +417,29 @@ $("#tgSeg").addEventListener("click", (e) => {
   [...$("#tgSeg").children].forEach(x => x.classList.toggle("active", x === b));
   renderTargets();
 });
-function card(k, v, d, color) {
-  return `<div class="stat"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div>${d?`<div class="d" style="color:${color||"var(--ok)"}">${esc(d)}</div>`:""}</div>`;
+function card(k, v, d, color, action) {
+  return `<div class="stat${action ? " clickable" : ""}"${action ? ` data-action="${action}"` : ""}><div class="k">${esc(k)}${action ? ' <span class="go">→</span>' : ""}</div><div class="v">${esc(v)}</div>${d?`<div class="d" style="color:${color||"var(--ok)"}">${esc(d)}</div>`:""}</div>`;
+}
+
+function goTab(p) { const b = document.querySelector(`#nav button[data-p="${p}"]`); if (b) b.click(); }
+
+// Drill-down: list of today's calls (or just sign-ups), each row opens that lead.
+async function openCallsModal(signedOnly) {
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  let q = sb.from("call_log").select("created_at,outcome,note,caller_id,lead_id,leads(business)")
+    .gte("created_at", start.toISOString()).order("created_at", { ascending: false });
+  if (signedOnly) q = q.eq("outcome", "Signed up");
+  const { data, error } = await q;
+  if (error) { toast(error.message); return; }
+  const rows = data || [];
+  $("#lmTitle").textContent = signedOnly ? `Sign-ups today (${rows.length})` : `Calls today (${rows.length})`;
+  $("#lmBody").innerHTML = rows.length
+    ? `<div class="hist" style="border-top:0;padding-top:0">` + rows.map(h =>
+        `<div class="hevent" data-lead="${h.lead_id}" style="cursor:pointer"><div><div class="ho">${esc(h.leads?.business || "(lead)")}</div><div>${esc(h.outcome)}${h.note ? " · " + esc(h.note) : ""}</div></div><div class="ht" style="margin-left:auto">${esc(profiles[h.caller_id]?.full_name || "")} · ${new Date(h.created_at).toLocaleTimeString()}</div></div>`
+      ).join("") + `</div>`
+    : `<div class="empty">No calls logged today yet.</div>`;
+  $("#leadModal").classList.remove("hidden");
+  $$("#lmBody .hevent[data-lead]").forEach(el => el.addEventListener("click", () => { if (el.dataset.lead) openLeadDetail(el.dataset.lead); }));
 }
 
 // ---------------- FILES ----------------
@@ -704,6 +725,16 @@ $("#leadModal") && $("#leadModal").addEventListener("click", (e) => { if (e.targ
 // Team chat send
 $("#chatSend") && $("#chatSend").addEventListener("click", sendMessage);
 $("#chatInput") && $("#chatInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendMessage(); } });
+
+// Dashboard stat cards → drill into the detail
+$("#statCards") && $("#statCards").addEventListener("click", (e) => {
+  const c = e.target.closest(".stat[data-action]"); if (!c) return;
+  const a = c.dataset.action;
+  if (a === "calls-today") openCallsModal(false);
+  else if (a === "signups-today") openCallsModal(true);
+  else if (a === "callbacks-due") { if ($("#aStatus")) $("#aStatus").value = "Callback"; goTab("all"); }
+  else if (a === "leads-remaining") { goTab("queue"); }
+});
 
 // ---------------- NAV ----------------
 $("#nav").addEventListener("click", (e) => {

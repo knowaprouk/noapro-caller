@@ -168,6 +168,10 @@ textarea:focus,input.dt:focus{border-color:var(--brand)}
 .stat .k{font-size:12px;color:var(--muted);font-weight:600}
 .stat .v{font-size:25px;font-weight:800;margin-top:6px}
 .stat .d{font-size:12px;font-weight:700;margin-top:4px;color:var(--ok)}
+.stat.clickable{cursor:pointer;transition:.15s}
+.stat.clickable:hover{border-color:var(--brand);box-shadow:0 3px 12px rgba(17,144,239,.14)}
+.stat .go{color:var(--brand);font-weight:800;opacity:0;transition:.15s}
+.stat.clickable:hover .go{opacity:1}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .lb{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
 .lb:last-child{border-bottom:0}
