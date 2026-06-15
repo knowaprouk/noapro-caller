@@ -87,6 +87,13 @@ async function boot() {
   $("#appView").classList.remove("hidden");
 
   await loadProfiles();
+  // if an admin has removed this caller's profile, block access
+  if (Object.keys(profiles).length && !profiles[session.user.id]) {
+    await sb.auth.signOut();
+    alert("Your access to NoaPro Caller has been removed by an admin.");
+    location.reload();
+    return;
+  }
   me = profiles[session.user.id] || { id: session.user.id, full_name: "You", initials: "ME", color: "#0d7d6b" };
 
   // record this sign-in / activity, and reveal the Admin tab for admins
@@ -844,19 +851,45 @@ async function loadAdmin() {
   $("#adminTeam").innerHTML = Object.values(profiles).map(p => {
     const on = online.has(p.id);
     const seen = p.last_seen ? new Date(p.last_seen).toLocaleString() : "never";
+    const actions = p.id === me.id
+      ? `<span style="width:210px;text-align:right;color:var(--muted);font-size:12px">you</span>`
+      : `<span style="display:flex;gap:8px;justify-content:flex-end;width:210px">
+           <button class="btn ghost mkadmin" data-id="${p.id}" data-val="${p.is_admin ? '0' : '1'}">${p.is_admin ? 'Remove admin' : 'Make admin'}</button>
+           <button class="btn ghost rmcaller" data-id="${p.id}" data-name="${esc(p.full_name)}" style="color:var(--red);border-color:var(--red)">Remove</button>
+         </span>`;
     return `<div class="lb">
       <span class="who" style="width:150px"><span class="ava" style="background:${esc(p.color)};width:26px;height:26px;font-size:11px">${esc(initials(p))}</span>${esc(p.full_name)}${p.is_admin ? ' <span class="st New" style="font-size:9px">admin</span>' : ''}</span>
-      <span style="width:90px;font-size:12px;font-weight:700;color:${on ? 'var(--ok)' : 'var(--muted)'}">${on ? '● online' : 'offline'}</span>
+      <span style="width:84px;font-size:12px;font-weight:700;color:${on ? 'var(--ok)' : 'var(--muted)'}">${on ? '● online' : 'offline'}</span>
       <span style="flex:1;color:var(--muted);font-size:12px">last active: ${esc(seen)}</span>
-      <span class="num">${callsBy[p.id] || 0} calls</span>
-      <span class="num" style="color:var(--ok)">${signBy[p.id] || 0} signed</span>
+      <span style="min-width:62px;text-align:right;font-weight:800;font-size:12px">${callsBy[p.id] || 0} calls</span>
+      <span style="min-width:66px;text-align:right;font-weight:800;font-size:12px;color:var(--ok)">${signBy[p.id] || 0} signed</span>
+      ${actions}
     </div>`;
   }).join("") || `<div class="empty">No callers.</div>`;
+  $$("#adminTeam .mkadmin").forEach(b => b.addEventListener("click", () => makeAdmin(b.dataset.id, b.dataset.val === '1')));
+  $$("#adminTeam .rmcaller").forEach(b => b.addEventListener("click", () => removeCaller(b.dataset.id, b.dataset.name)));
 
   const { data: log } = await sb.from("call_log").select("created_at,outcome,note,caller_id,leads(business)").order("created_at", { ascending: false }).limit(60);
   $("#adminActivity").innerHTML = (log && log.length) ? log.map(h =>
     `<div class="hevent" style="padding:10px 16px"><div><div class="ho">${esc(profiles[h.caller_id]?.full_name || "Someone")} — ${esc(h.outcome)}</div><div>${esc(h.leads?.business || "")}${h.note ? " · " + esc(h.note) : ""}</div></div><div class="ht" style="margin-left:auto">${new Date(h.created_at).toLocaleString()}</div></div>`
   ).join("") : `<div class="empty">No activity logged yet.</div>`;
+}
+
+async function makeAdmin(id, val) {
+  const { error } = await sb.from("profiles").update({ is_admin: val }).eq("id", id);
+  if (error) { toast(error.message); return; }
+  toast(val ? "Admin rights granted." : "Admin rights removed.");
+  loadAdmin();
+}
+
+async function removeCaller(id, name) {
+  if (!confirm(`Remove ${name} from the team? They'll be signed out and can no longer use the app.\n\nTheir leads are kept (any in-progress call is released). To also delete their login permanently, do it in Supabase → Authentication → Users.`)) return;
+  // release any lead they were mid-call on
+  await sb.from("leads").update({ status: "New", claimed_by: null, claimed_at: null }).eq("claimed_by", id).eq("status", "Calling");
+  const { error } = await sb.from("profiles").delete().eq("id", id);
+  if (error) { toast(error.message); return; }
+  toast(name + " removed from the team.");
+  loadAdmin();
 }
 
 // ---------------- REALTIME ----------------
