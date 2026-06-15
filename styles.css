@@ -89,6 +89,8 @@ h1{font-size:21px;margin:0 0 3px;letter-spacing:-.02em}
 .filters input{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px;outline:none}
 .filters input:focus{border-color:var(--brand)}
 .filters .btn{padding:7px 12px}
+.filters .seg{flex:0 0 auto}
+.seg.region button{padding:6px 14px}
 .filters select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px;background:#fff;outline:none}
 .filters select:focus{border-color:var(--brand)}
 

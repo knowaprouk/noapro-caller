@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
 
@@ -66,8 +66,9 @@
           <div class="panel">
             <div class="panel-h">Unclaimed leads <span class="pill"><span class="blink"></span> live</span></div>
             <div class="filters">
-              <input id="fArea" placeholder="Filter area / postcode (e.g. Kent, LS)">
-              <input id="fCat" placeholder="Filter category (e.g. Plumber)">
+              <div class="seg region" data-region-seg><button data-r="" class="active">All</button><button data-r="leeds">Leeds</button><button data-r="kent">Kent</button></div>
+              <input id="fArea" placeholder="Area / postcode">
+              <input id="fCat" placeholder="Category">
               <button class="btn ghost" id="fClear">Clear</button>
             </div>
             <div id="queueList"><div class="empty">Loading…</div></div>
@@ -85,6 +86,7 @@
         <p class="sub">Every lead and its current status — claimed, called, signed up, or not interested. Click a column heading to sort, or any row to see the business again with its full call history.</p>
         <div class="panel">
           <div class="filters">
+            <div class="seg region" data-region-seg><button data-r="" class="active">All</button><button data-r="leeds">Leeds</button><button data-r="kent">Kent</button></div>
             <input id="aSearch" placeholder="Search business / phone">
             <select id="aStatus">
               <option value="">All statuses</option>
@@ -198,6 +200,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="app.js?v=11"></script>
+<script type="module" src="app.js?v=12"></script>
 </body>
 </html>

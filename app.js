@@ -118,10 +118,20 @@ function renderTeam() {
 // ---------------- QUEUE ----------------
 const RENDER_CAP = 150;   // max lead rows drawn at once (keeps the page snappy)
 
+// Region split — the two imported batches came from different sheets:
+//   Leeds = "Construction Outreach" sheet, Kent = "LEADS" sheet.
+let region = "";  // "", "leeds", "kent"
+function regionClause(q) {
+  if (region === "leeds") return q.ilike("source_file", "%Construction Outreach%");
+  if (region === "kent")  return q.ilike("source_file", "%LEADS%");
+  return q;
+}
+
 // Apply the active filters (area, category, search) to a Supabase query — runs
 // server-side so filters reach ALL leads, not just the ones currently on screen.
 function queueFilter(q) {
   q = q.in("status", [...CALLABLE, "Calling"]);
+  q = regionClause(q);
   const area = (($("#fArea") || {}).value || "").trim();
   const cat  = (($("#fCat")  || {}).value || "").trim();
   const term = (($("#search")|| {}).value || "").trim().replace(/[,()%*]/g, " ").trim();
@@ -474,6 +484,7 @@ async function deleteFile(name) {
 let allSort = { col: "created_at", dir: "desc" };
 
 function allFilter(q) {
+  q = regionClause(q);
   const term = (($("#aSearch") || {}).value || "").trim().replace(/[,()%*]/g, " ").trim();
   const st   = (($("#aStatus") || {}).value || "");
   const area = (($("#aArea")   || {}).value || "").trim();
@@ -735,6 +746,15 @@ $("#aClear") && $("#aClear").addEventListener("click", () => {
   if ($("#aStatus")) $("#aStatus").value = "";
   loadAllLeads();
 });
+
+// Region toggle (All / Leeds / Kent) — shared across Queue and All Leads
+$$("[data-region-seg]").forEach(seg => seg.addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-r]"); if (!b) return;
+  region = b.dataset.r;
+  $$("[data-region-seg] button").forEach(x => x.classList.toggle("active", x.dataset.r === region));
+  loadQueue();
+  if ($("#all").classList.contains("show")) loadAllLeads();
+}));
 
 // Lead detail modal close
 $("#lmClose") && $("#lmClose").addEventListener("click", closeModal);
