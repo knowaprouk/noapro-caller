@@ -687,12 +687,13 @@ async function importLeadFile(file) {
     data.forEach(l => { const k = (l.business || "").trim().toLowerCase(); (existing[k] = existing[k] || []).push(l.id); });
     if (data.length < 1000) break;
   }
-  const updates = [], inserts = [];
+  const byId = new Map(), inserts = [];   // Map keyed by id → one update per row (avoids ON CONFLICT dup-row error)
   for (const l of leads) {
     const ids = existing[l.business.trim().toLowerCase()];
-    if (ids && ids.length) { if (l.email) ids.forEach(id => updates.push({ id, business: l.business, email: l.email })); }
+    if (ids && ids.length) { if (l.email) ids.forEach(id => byId.set(id, { id, business: l.business, email: l.email })); }
     else inserts.push(l);
   }
+  const updates = [...byId.values()];
   let nUp = 0;
   for (let i = 0; i < updates.length; i += 300) {
     const { error } = await sb.from("leads").upsert(updates.slice(i, i + 300), { onConflict: "id" });
