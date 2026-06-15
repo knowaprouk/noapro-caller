@@ -212,6 +212,7 @@ function renderCall() {
     <div class="call">
       <div class="biz">${esc(active.business)}</div>
       <div class="cat">${esc(active.category || "")}${active.area ? " · " + esc(active.area) : ""}</div>
+      ${active.email ? `<div class="cat">✉ <a href="mailto:${esc(active.email)}">${esc(active.email)}</a></div>` : ""}
       <div class="phone"><span class="phicon">${ICON_PHONE}</span><span class="num">${esc(active.phone || "—")}</span><span class="timer" id="timer">00:00</span></div>
       ${active.notes ? `<div class="scriptbox"><b>Previous notes:</b> ${esc(active.notes)}</div>` : ""}
       <label class="fl">Call notes</label>
@@ -384,10 +385,10 @@ async function renderTargets() {
 // ---------------- EXPORT RESULTS ----------------
 $("#exportBtn").addEventListener("click", async () => {
   const { data, error } = await sb.from("leads")
-    .select("business,phone,category,area,status,last_called_at,callback_at,notes")
+    .select("business,phone,email,category,area,status,last_called_at,callback_at,notes")
     .order("status", { ascending: true });
   if (error) { toast(error.message); return; }
-  const cols = ["business","phone","category","area","status","last_called_at","callback_at","notes"];
+  const cols = ["business","phone","email","category","area","status","last_called_at","callback_at","notes"];
   const q = (v) => { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; };
   const csv = [cols.join(",")].concat((data||[]).map(r => cols.map(c => q(r[c])).join(","))).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -515,6 +516,7 @@ async function loadAllLeads() {
       <td>${esc(l.category || "")}</td>
       <td>${esc(l.area || "")}</td>
       <td>${esc(l.phone || "")}</td>
+      <td>${l.email ? `<a href="mailto:${esc(l.email)}" onclick="event.stopPropagation()">${esc(l.email)}</a>` : ""}</td>
       <td><span class="${stClass(l.status)}">${esc(l.status)}</span></td>
       <td>${l.last_called_at ? new Date(l.last_called_at).toLocaleDateString() : "—"}</td>
       <td>${l.callback_at ? new Date(l.callback_at).toLocaleString() : "—"}</td>
@@ -535,6 +537,7 @@ async function openLeadDetail(id) {
     <div class="kv">
       <span class="k">Status</span><span><span class="${stClass(l.status)}">${esc(l.status)}</span></span>
       <span class="k">Phone</span><span>${esc(l.phone || "—")}</span>
+      <span class="k">Email</span><span>${l.email ? `<a href="mailto:${esc(l.email)}">${esc(l.email)}</a>` : "—"}</span>
       <span class="k">Category</span><span>${esc(l.category || "—")}</span>
       <span class="k">Area</span><span>${esc(l.area || "—")}</span>
       <span class="k">Claimed by</span><span>${esc(l.claimed_by ? (profiles[l.claimed_by]?.full_name || "—") : "—")}</span>
@@ -642,13 +645,14 @@ function leadsFromTable(aoa, sourceFile) {
   const pCols = colsFor(["phone","telephone","tel","number","phone number","mobile","contact number","tel no","phone no"]);
   const cCols = colsFor(["category","trade","type","trade category","sector","industry"]);
   const aCols = colsFor(["area","town","location","city","region","postcode","post code","county"]);
+  const eCols = colsFor(["email","e-mail","email address","contact email","emails"]);
   const pick = (r, cols) => { for (const c of cols) { const v = String(r[c] == null ? "" : r[c]).trim(); if (v) return v; } return null; };
   const out = [];
   for (let i = hi + 1; i < aoa.length; i++) {
     const r = aoa[i] || [];
     const business = pick(r, bCols);
     if (!business) continue;
-    out.push({ business, phone: pick(r, pCols), category: pick(r, cCols), area: pick(r, aCols), status: "New", source_file: sourceFile });
+    out.push({ business, phone: pick(r, pCols), category: pick(r, cCols), area: pick(r, aCols), email: pick(r, eCols), status: "New", source_file: sourceFile });
   }
   return out;
 }
