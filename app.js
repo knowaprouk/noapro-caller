@@ -460,24 +460,29 @@ async function openCallsModal(signedOnly) {
 }
 
 // ---------------- FILES ----------------
-async function loadFiles() {
-  const { data, error } = await sb.storage.from("files").list("", { sortBy: { column: "created_at", order: "desc" } });
-  if (error) { $("#fileList").innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
-  const files = (data || []).filter(f => f.id);
-  $("#fileList").innerHTML = files.length ? files.map(f => {
+// general shared docs live at the bucket root; imported lead files live under "imports/"
+async function loadFiles()   { return loadFileList("",        "#fileList",   "No documents yet. Upload one to share with the team."); }
+async function loadImports() { return loadFileList("imports/", "#importList", "No imported files yet — upload a spreadsheet above."); }
+
+async function loadFileList(prefix, containerId, emptyMsg) {
+  const { data, error } = await sb.storage.from("files").list(prefix || "", { sortBy: { column: "created_at", order: "desc" } });
+  if (error) { $(containerId).innerHTML = `<div class="empty">${esc(error.message)}</div>`; return; }
+  const files = (data || []).filter(f => f.id);   // folders have null id — skipped
+  $(containerId).innerHTML = files.length ? files.map(f => {
     const ext = (f.name.split(".").pop() || "").toUpperCase().slice(0,4);
-    return `<div class="file" data-name="${esc(f.name)}"><span class="fic">${esc(ext)}</span><div><div class="nm">${esc(f.name)}</div><div class="mt">${new Date(f.created_at).toLocaleDateString()}</div></div><button class="fdel" data-fdel="${esc(f.name)}" title="Delete file">${ICON_TRASH}</button></div>`;
-  }).join("") : `<div class="empty">No files yet. Upload a script or lead list.</div>`;
-  $$("#fileList .file").forEach(el => el.addEventListener("click", () => downloadFile(el.dataset.name)));
-  $$("#fileList .fdel").forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); deleteFile(b.dataset.fdel); }));
+    const full = (prefix || "") + f.name;
+    return `<div class="file" data-path="${esc(full)}"><span class="fic">${esc(ext)}</span><div><div class="nm">${esc(f.name)}</div><div class="mt">${new Date(f.created_at).toLocaleDateString()}</div></div><button class="fdel" data-fdel="${esc(full)}" title="Delete file">${ICON_TRASH}</button></div>`;
+  }).join("") : `<div class="empty">${esc(emptyMsg)}</div>`;
+  $$(`${containerId} .file`).forEach(el => el.addEventListener("click", () => downloadFile(el.dataset.path)));
+  $$(`${containerId} .fdel`).forEach(b => b.addEventListener("click", (e) => { e.stopPropagation(); deleteFile(b.dataset.fdel); }));
 }
 
-async function deleteFile(name) {
-  if (!confirm(`Delete "${name}" permanently?`)) return;
-  const { error } = await sb.storage.from("files").remove([name]);
+async function deleteFile(path) {
+  if (!confirm("Delete this file permanently?")) return;
+  const { error } = await sb.storage.from("files").remove([path]);
   if (error) { toast(error.message); return; }
   toast("File deleted.");
-  loadFiles();
+  loadFiles(); loadImports();
 }
 
 // ---------------- ALL LEADS (full traceability) ----------------
@@ -608,8 +613,8 @@ async function sendMessage() {
   if (error) { toast(error.message); inp.value = body; }
 }
 
-async function downloadFile(name) {
-  const { data, error } = await sb.storage.from("files").createSignedUrl(name, 60);
+async function downloadFile(path) {
+  const { data, error } = await sb.storage.from("files").createSignedUrl(path, 60);
   if (error) { toast(error.message); return; }
   window.open(data.signedUrl, "_blank");
 }
@@ -677,8 +682,8 @@ async function importLeadFile(file) {
     toast(`Importing… ${n}/${leads.length}`);
   }
   toast(`Imported ${n} leads.`);
-  try { await sb.storage.from("files").upload(file.name, file, { upsert: true }); } catch (_) {}
-  loadQueue(); loadFiles();
+  try { await sb.storage.from("files").upload("imports/" + file.name, file, { upsert: true }); } catch (_) {}
+  loadQueue(); loadImports();
 }
 
 $("#csvInput").addEventListener("change", async (e) => {
@@ -783,6 +788,7 @@ $("#nav").addEventListener("click", (e) => {
   $("#" + b.dataset.p).classList.add("show");
   if (b.dataset.p === "dash") loadDashboard();
   if (b.dataset.p === "files") loadFiles();
+  if (b.dataset.p === "imports") loadImports();
   if (b.dataset.p === "all") loadAllLeads();
   if (b.dataset.p === "chat") loadMessages();
 });

@@ -37,7 +37,8 @@
       <button class="active" data-p="queue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>Call Queue</span><span class="badge" id="queueCount">0</span></button>
       <button data-p="all"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>All Leads</span></button>
       <button data-p="dash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></button>
-      <button data-p="files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Files &amp; Imports</span></button>
+      <button data-p="imports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M8 5H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-4"/></svg><span>Imports</span></button>
+      <button data-p="files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>Files</span></button>
       <button data-p="chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span>Team Chat</span></button>
     </nav>
     <div class="side-foot">
@@ -144,12 +145,11 @@
         </div>
       </section>
 
-      <!-- FILES & IMPORTS -->
-      <section class="page" id="files">
-        <h1>Files &amp; Imports</h1>
-        <p class="sub">Two separate things here: importing a lead spreadsheet into your call queue, and storing shared files like scripts and info docs.</p>
+      <!-- IMPORTS -->
+      <section class="page" id="imports">
+        <h1>Imports</h1>
+        <p class="sub">Upload lead spreadsheets to add businesses to the call queue. The original files are kept here as a record.</p>
 
-        <!-- 1) Import lead spreadsheet -->
         <div class="panel" style="margin-bottom:16px">
           <div class="panel-h">Import lead spreadsheet</div>
           <div class="import-card">
@@ -158,14 +158,23 @@
               <p>Upload an <b>Excel</b> (.xlsx) or <b>CSV</b> file. It reads every sheet, finds the header row automatically, and maps <b>business</b> (required), plus <b>phone</b>, <b>category</b> and <b>area/location/postcode</b>.</p>
               <label class="import-big" for="csvInput">Choose Excel or CSV file</label>
               <input type="file" id="csvInput" accept=".csv,.xlsx,.xls" class="hidden">
-              <div class="import-note" id="importNote">Dashboard/summary sheets are skipped. A copy of the file is also saved to Shared files below.</div>
+              <div class="import-note" id="importNote">Dashboard/summary sheets are skipped. The original file is saved below for reference.</div>
             </div>
           </div>
         </div>
 
-        <!-- 2) Shared files -->
         <div class="panel">
-          <div class="panel-h">Shared files
+          <div class="panel-h">Imported lead files</div>
+          <div class="files" id="importList"><div class="empty">Loading…</div></div>
+        </div>
+      </section>
+
+      <!-- FILES -->
+      <section class="page" id="files">
+        <h1>Files</h1>
+        <p class="sub">Shared documents for the team — call scripts, pricing sheets, objection-handling guides, anything you want everyone to have.</p>
+        <div class="panel">
+          <div class="panel-h">Shared documents
             <label class="btn ghost" for="fileInput" style="margin-left:auto;cursor:pointer">Upload</label>
             <input type="file" id="fileInput" class="hidden">
           </div>
@@ -200,6 +209,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="app.js?v=12"></script>
+<script type="module" src="app.js?v=13"></script>
 </body>
 </html>
