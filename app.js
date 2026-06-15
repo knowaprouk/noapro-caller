@@ -334,7 +334,7 @@ async function loadDashboard() {
 
   // leaderboard (sign-ups by caller)
   const byCaller = {};
-  calls.filter(c => c.outcome === "Signed up").forEach(c => byCaller[c.caller_id] = (byCaller[c.caller_id]||0)+1);
+  calls.filter(c => c.outcome === "Signed up" && !(profiles[c.caller_id] && profiles[c.caller_id].is_admin)).forEach(c => byCaller[c.caller_id] = (byCaller[c.caller_id]||0)+1);
   const lbRows = Object.entries(byCaller).sort((a,b)=>b[1]-a[1]);
   const max = Math.max(1, ...lbRows.map(r=>r[1]));
   $("#leaderboard").innerHTML = lbRows.length ? lbRows.map(([id,n]) =>
@@ -380,8 +380,9 @@ async function renderTargets() {
   });
 
   const callTgt = DAILY_CALL_TARGET * mult, signTgt = DAILY_SIGNUP_TARGET * mult;
-  const callers = Object.values(profiles);
-  $("#targetPill").textContent = `team ${rows.length}/${callers.length * callTgt} calls ${label}`;
+  const callers = Object.values(profiles).filter(p => !p.is_admin);   // owners/admins aren't tracked
+  const teamCalls = rows.filter(c => !(profiles[c.caller_id] && profiles[c.caller_id].is_admin)).length;
+  $("#targetPill").textContent = `team ${teamCalls}/${callers.length * callTgt} calls ${label}`;
   const bar = (n, t) => { const pct = Math.min(100, Math.round(n / t * 100)); const hit = n >= t ? "hit" : ""; return `<span class="bar"><i class="${hit}" style="width:${pct}%"></i></span><span class="num">${n}/${t}${n>=t?" ✓":""}</span>`; };
   $("#targets").innerHTML = callers.length ? callers.map(p => {
     const c = callsBy[p.id] || 0, s = signBy[p.id] || 0;
