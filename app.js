@@ -258,10 +258,13 @@ async function logOutcome(outcome) {
 
 async function releaseLead() {
   if (!active) return;
-  await sb.from("leads").update({ claimed_by: null, claimed_at: null, status: active.status === "Calling" ? "New" : active.status })
-    .eq("id", active.id);
+  const id = active.id;
+  const { error } = await sb.from("leads").update({ claimed_by: null, claimed_at: null, status: "New" }).eq("id", id);
+  if (error) { toast(error.message); return; }
   active = null; stopTimer();
+  toast("Lead released — back in the queue as New.");
   loadQueue();
+  if ($("#all").classList.contains("show")) loadAllLeads();
 }
 
 async function deleteLead(id) {
