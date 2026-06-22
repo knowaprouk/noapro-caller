@@ -642,6 +642,61 @@ async function loadAllLeads() {
   $$("#allBody tr[data-id]").forEach(tr => tr.addEventListener("click", () => openLeadDetail(tr.dataset.id)));
 }
 
+// ---------------- CONNECTED LEADS (contacted to date) ----------------
+let connSort = { col: "last_contact", dir: "desc" };
+let connCallerFilled = false;
+
+function connFilter(q) {
+  q = regionClause(q);
+  const term    = (($("#cSearch")  || {}).value || "").trim().replace(/[,()%*]/g, " ").trim();
+  const caller  = (($("#cCaller")  || {}).value || "");
+  const outcome = (($("#cOutcome") || {}).value || "");
+  const area    = (($("#cArea")    || {}).value || "").trim();
+  if (caller)  q = q.eq("last_caller_id", caller);
+  if (outcome) q = q.eq("last_outcome", outcome);
+  if (area)    q = q.ilike("area", `%${area}%`);
+  if (term)    q = q.or(`business.ilike.%${term}%,phone.ilike.%${term}%`);
+  return q;
+}
+
+// caller dropdown is built from the team list (once)
+function fillConnCaller() {
+  if (connCallerFilled) return;
+  const sel = $("#cCaller"); if (!sel) return;
+  const opts = Object.values(profiles).filter(p => p.full_name)
+    .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""))
+    .map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join("");
+  sel.innerHTML = `<option value="">All callers</option>` + opts;
+  connCallerFilled = true;
+}
+
+async function loadConnected() {
+  fillConnCaller();
+  const { count } = await connFilter(sb.from("contacted_leads").select("*", { count: "exact", head: true }));
+  const { data, error } = await connFilter(sb.from("contacted_leads").select("*"))
+    .order(connSort.col, { ascending: connSort.dir === "asc", nullsFirst: false })
+    .limit(300);
+  if (error) { toast(error.message); return; }
+  const rows = data || [], total = count || 0;
+  $("#connCount").textContent = total > rows.length ? `${rows.length} of ${total} contacted` : `${total} contacted`;
+  $("#connBody").innerHTML = rows.length ? rows.map(l => `
+    <tr data-id="${l.id}">
+      <td title="${esc(l.business)}">${esc(l.business)}</td>
+      <td>${esc(l.area || "")}</td>
+      <td>${esc(l.phone || "")}</td>
+      <td>${esc(profiles[l.last_caller_id]?.full_name || "—")}</td>
+      <td><span class="${stClass(l.last_outcome)}">${esc(l.last_outcome || "")}</span></td>
+      <td><span class="${stClass(l.status)}">${esc(l.status)}</span></td>
+      <td>${l.attempts}</td>
+      <td>${l.last_contact ? new Date(l.last_contact).toLocaleString() : "—"}</td>
+    </tr>`).join("") : `<tr><td colspan="8" class="empty">No contacted leads match these filters.</td></tr>`;
+  $$("#connected .ltable th").forEach(th => {
+    th.classList.toggle("sorted", th.dataset.sort === connSort.col);
+    th.classList.toggle("asc", th.dataset.sort === connSort.col && connSort.dir === "asc");
+  });
+  $$("#connBody tr[data-id]").forEach(tr => tr.addEventListener("click", () => openLeadDetail(tr.dataset.id)));
+}
+
 async function openLeadDetail(id) {
   const { data: la } = await sb.from("leads").select("*").eq("id", id).limit(1);
   const l = la && la[0]; if (!l) { toast("Lead not found."); return; }
@@ -901,13 +956,31 @@ $("#aClear") && $("#aClear").addEventListener("click", () => {
   loadAllLeads();
 });
 
-// Region toggle (All / Leeds / Kent) — shared across Queue and All Leads
+// Connected leads: sortable headers + filters
+$$("#connected .ltable th[data-sort]").forEach(th => th.addEventListener("click", () => {
+  const c = th.dataset.sort;
+  if (connSort.col === c) connSort.dir = connSort.dir === "asc" ? "desc" : "asc";
+  else connSort = { col: c, dir: "asc" };
+  loadConnected();
+}));
+const reloadConn = debounce(loadConnected, 300);
+["#cSearch", "#cArea"].forEach(s => { const e = $(s); if (e) e.addEventListener("input", reloadConn); });
+["#cCaller", "#cOutcome"].forEach(s => { const e = $(s); if (e) e.addEventListener("change", loadConnected); });
+$("#cClear") && $("#cClear").addEventListener("click", () => {
+  ["#cSearch", "#cArea"].forEach(s => { if ($(s)) $(s).value = ""; });
+  if ($("#cCaller")) $("#cCaller").value = "";
+  if ($("#cOutcome")) $("#cOutcome").value = "";
+  loadConnected();
+});
+
+// Region toggle (All / Leeds / Kent) — shared across Queue, All Leads, Connected
 $$("[data-region-seg]").forEach(seg => seg.addEventListener("click", (e) => {
   const b = e.target.closest("button[data-r]"); if (!b) return;
   region = b.dataset.r;
   $$("[data-region-seg] button").forEach(x => x.classList.toggle("active", x.dataset.r === region));
   loadQueue();
   if ($("#all").classList.contains("show")) loadAllLeads();
+  if ($("#connected").classList.contains("show")) loadConnected();
 }));
 
 // Lead detail modal close
@@ -939,6 +1012,7 @@ $("#nav").addEventListener("click", (e) => {
   if (b.dataset.p === "files") loadFiles();
   if (b.dataset.p === "imports") loadImports();
   if (b.dataset.p === "all") loadAllLeads();
+  if (b.dataset.p === "connected") loadConnected();
   if (b.dataset.p === "chat") loadMessages();
   if (b.dataset.p === "admin") loadAdmin();
 });
@@ -1005,11 +1079,13 @@ function subscribeRealtime() {
         loadQueue();
         if ($("#dash").classList.contains("show")) loadDashboard();
         if ($("#all").classList.contains("show")) loadAllLeads();
+        if ($("#connected").classList.contains("show")) loadConnected();
       }, 250);
     })
     .on("postgres_changes", { event: "*", schema: "public", table: "call_log" }, () => {
       if ($("#dash").classList.contains("show")) loadDashboard();
       if ($("#admin").classList.contains("show")) loadAdmin();
+      if ($("#connected").classList.contains("show")) loadConnected();
     })
     .subscribe();
 
