@@ -204,18 +204,9 @@
             <div class="drop">
               <h3>Add leads to the call queue</h3>
               <p>Upload an <b>Excel</b> (.xlsx) or <b>CSV</b> file. It reads every sheet, finds the header row automatically, and maps <b>business</b> (required), plus <b>phone</b>, <b>category</b> and <b>area/location/postcode</b>.</p>
-              <div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:10px">
-                <label for="importRegion" style="font-size:13px;color:var(--muted);font-weight:600">Region for this file:</label>
-                <select id="importRegion" style="padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px">
-                  <option value="">No region</option>
-                  <option value="leeds">Leeds</option>
-                  <option value="kent">Kent</option>
-                  <option value="both">Both (Leeds &amp; Kent)</option>
-                </select>
-              </div>
               <label class="import-big" for="csvInput">Choose Excel or CSV file</label>
               <input type="file" id="csvInput" accept=".csv,.xlsx,.xls" class="hidden">
-              <div class="import-note" id="importNote">Re-upload trackers any time — leads already in your list (matched by phone or business name) are skipped and parked under <b>Duplicate leads</b> below. Dashboard/summary sheets are ignored, and the original file is saved for reference.</div>
+              <div class="import-note" id="importNote">Region is set automatically from each lead's postcode (<b>LS</b> → Leeds, everything else → Kent). Re-upload trackers any time — leads already in your list (matched by phone or business name) are skipped and parked under <b>Duplicate leads</b> below. Dashboard/summary sheets are ignored, and the original file is saved for reference.</div>
             </div>
           </div>
         </div>
@@ -309,6 +300,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script type="module" src="app.js?v=28"></script>
+<script type="module" src="app.js?v=29"></script>
 </body>
 </html>

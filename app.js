@@ -169,6 +169,9 @@ function regionClause(q) {
   return q;
 }
 
+// Region is derived from the postcode: starts with "LS" = Leeds, everything else = Kent.
+function regionFor(area) { return (area || "").trim().toLowerCase().startsWith("ls") ? "leeds" : "kent"; }
+
 // Apply the active filters (area, category, search, region) to a Supabase query —
 // runs server-side so filters reach ALL leads, not just the ones on screen.
 // Status is applied by the caller so the queue can prioritise certain statuses.
@@ -635,7 +638,8 @@ async function addDuplicate(id) {
   const d = data && data[0]; if (!d) return;
   const { error } = await sb.from("leads").insert({
     business: d.business, phone: d.phone, email: d.email,
-    category: d.category, area: d.area, status: "New", source_file: d.source_file
+    category: d.category, area: d.area, status: "New", source_file: d.source_file,
+    region: regionFor(d.area)
   });
   if (error) { toast(error.message); return; }
   await sb.from("duplicate_leads").delete().eq("id", id);
@@ -945,9 +949,6 @@ async function importLeadFile(file) {
     if (data.length < 1000) break;
   }
 
-  // region chosen for this file (Leeds / Kent / Both / none)
-  const impRegion = ($("#importRegion")?.value || "") || null;
-
   // New leads go to the queue; anything that already exists is parked for review.
   const inserts = [], dupes = [];
   for (const l of leads) {
@@ -959,7 +960,7 @@ async function importLeadFile(file) {
       dupes.push({ business: l.business, phone: l.phone, email: l.email, category: l.category, area: l.area,
                    source_file: l.source_file, reason, matched_lead_id: phoneMatch || nameMatch, imported_by: me.id });
     } else {
-      l.region = impRegion;
+      l.region = regionFor(l.area);
       inserts.push(l);
     }
   }
@@ -1022,8 +1023,8 @@ $("#addLeadBtn").addEventListener("click", async () => {
   const business = prompt("Business name?"); if (!business) return;
   const phone = prompt("Phone number?") || null;
   const category = prompt("Category / trade?") || null;
-  const area = prompt("Area / town?") || null;
-  const { error } = await sb.from("leads").insert({ business, phone, category, area, status: "New" });
+  const area = prompt("Area / postcode?") || null;
+  const { error } = await sb.from("leads").insert({ business, phone, category, area, status: "New", region: regionFor(area) });
   if (error) { toast(error.message); return; }
   toast("Lead added."); loadQueue();
 });
